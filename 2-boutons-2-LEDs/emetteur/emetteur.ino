@@ -102,7 +102,7 @@ void loop()
   
   if (poussoir1.fell())
   {
-    /* le bouton a ete appuye, on envoie un message */
+    /* le bouton 1 a ete appuye, on envoie un message avec la donnee 1 */
     messageCAN.data[0] = 1; /* L'octet 0 des donnees a 1 */
     messageCAN.len = 1;     /* Un seul octet de donnees  */ 
     const bool ok = controleurCAN.tryToSend(messageCAN);
@@ -118,7 +118,7 @@ void loop()
 
   if (poussoir2.fell())
   {
-    /* le bouton a ete appuye, on envoie un message */
+    /* le bouton 2 a ete appuye, on envoie un message avec la donnee 2 */
     messageCAN.data[0] = 2; /* L'octet 0 des donnees a 1 */
     messageCAN.len = 1;     /* Un seul octet de donnees  */ 
     const bool ok = controleurCAN.tryToSend(messageCAN);
