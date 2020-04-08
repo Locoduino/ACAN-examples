@@ -88,8 +88,7 @@ void loop()
     /* Un message CAN est arrive */
     static uint32_t numero = 0;
     /* 
-     * On le lit meme s'il il ne comporte pas de donnees car 
-     * il faut l'enlever de la file d'attente de reception.
+     * On lit le message.
      */
     controleurCAN.receive(messageCAN) ;
     Serial.print("Recepteur: ");
