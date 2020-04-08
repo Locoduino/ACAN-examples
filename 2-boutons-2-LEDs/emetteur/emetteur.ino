@@ -42,11 +42,15 @@ ACAN2515 controleurCAN(MCP2515_CS, SPI, MCP2515_INT);
 
 /*
  * La frequence du quartz du MCP2515 en hertz. 
- * Sur la carte LOCODUINO, il s'agit d'un quartz 16MHz
  * Sur les cartes CAN que l'on peut trouvez chez les revendeurs
  * chinois, il s'agit generalement d'un quartz 8MHz
  */
-static const uint32_t QUARTZ_FREQUENCY = 16000000;
+static const uint32_t FREQUENCE_DU_QUARTZ = 8ul * 1000ul * 1000ul;
+
+/*
+ * La fréquence du bus CAN
+ */
+static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
 
 /*
  * Un objet pour le message CAN. Par defaut c'est un message
@@ -75,7 +79,7 @@ void setup()
   /* Configure le MCP2515 */
   Serial.println("Configuration du MCP2515");
   /* Fixe la vitesse du bus a 125 kbits/s */
-  ACAN2515Settings reglages(QUARTZ_FREQUENCY, 125000);
+  ACAN2515Settings reglages(FREQUENCE_DU_QUARTZ, FREQUENCE_DU_BUS_CAN);
   /* Demarre le CAN */
   const uint16_t codeErreur = controleurCAN.begin(reglages, [] { controleurCAN.isr(); } );
   /* Verifie que tout est ok */

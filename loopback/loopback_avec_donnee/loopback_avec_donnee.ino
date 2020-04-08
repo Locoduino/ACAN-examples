@@ -1,5 +1,5 @@
 /*
- * Premier exemple de programme de l'article publé sur Locoduino:
+ * Deuxieme exemple de programme de l'article publé sur Locoduino:
  * https://www.locoduino.org/spip.php?article268
  */
 #include <ACAN2515Settings.h> /* Pour les reglages  */
@@ -60,19 +60,28 @@ void setup()
   else {
     Serial.println("OK !");
   }
+
+  /* Le message possède quatre octets de donnee */
+  messageCANEmission.len = 4;
 }
 
 void loop()
 {
+  /* Partie reception du message */
   if (controleurCAN.receive(messageCANReception)) {
-    Serial.println("recu !");
+    Serial.print("recu : ");
+    Serial.print(messageCANReception.data32[0]);
+    Serial.print(", longueur : ");
+    Serial.println(messageCANReception.len);
   }
 
   static uint32_t dateDenvoi = 0;
   static uint32_t compte = 0;
 
+  /* Partie envoi du message */
   uint32_t dateCourante = millis();
-  if (dateCourante - dateDenvoi >= 2000) {
+  if (dateCourante - dateDenvoi >= 100) {
+    messageCANEmission.data32[0] = compte;
     if (controleurCAN.tryToSend(messageCANEmission)) {
       Serial.print("envoi ");
       Serial.println(compte++);
