@@ -6,7 +6,7 @@
  * Materiel :
  * - 1 carte CAN a base de MCP2515
  * - 1 arduino UNO
- * - 2 boutons poussoir
+ * - 4 boutons poussoir
  * 
  * Bibliotheque employees (disponibles via le gestionnaire de bibliothèques) :
  * - acan2515
@@ -53,20 +53,26 @@ static const uint32_t FREQUENCE_DU_QUARTZ = 8ul * 1000ul * 1000ul;
 static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
 
 /*
- * Un objet pour le message CAN. Par defaut c'est un message
+ * Un objet pour le message CAN des LEDs. Par defaut c'est un message
  * standard avec l'identifiant 0 et aucun octet de donnees
  */
-CANMessage messageCANEmission;
+CANMessage messageCANLEDs;
 
 /*
- * Les boutons poussoir sont relies aux broches 3 et 4 
+ * Un objet pour le message CAN des Servos. Par defaut c'est un message
+ * standard avec l'identifiant 0 et aucun octet de donnees
  */
-static const uint8_t brocheBouton[] = { 3, 4 };
+CANMessage messageCANServos;
+
+/*
+ * Les boutons poussoir sont relies aux broches 3 à 6 
+ */
+static const uint8_t brocheBouton[] = { 3, 4, 5, 6 };
 
 /*
  * Les anti rebond des boutons
  */
-Bounce poussoir[2];
+Bounce poussoir[4];
 
 void setup()
 {
@@ -90,30 +96,67 @@ void setup()
   }
 
   /* Initialise les boutons */
-  for (uint8_t bouton = 0; bouton < 2; bouton++) {
+  for (uint8_t bouton = 0; bouton < 4; bouton++) {
     pinMode(brocheBouton[bouton], INPUT_PULLUP);
     poussoir[bouton].attach(brocheBouton[bouton]);
   }
+  /* 
+   * Initialise les messages. Le message pour les LEDs a un identifiant à 1
+   * Celui des servos a un identifiant à 2. Les deux messages on un
+   * octet de données
+   */
+  messageCANLEDs.id = 1;
+  messageCANLEDs.len = 1;
 
-  /* Un seul octet de donnees  */
-  messageCANEmission.len = 1; 
+  messageCANServos.id = 2;
+  messageCANServos.len = 1;
 }
 
 
 
 void loop()
 {
-  for (uint8_t bouton = 0; bouton < 2; bouton++) {
+  for (uint8_t bouton = 0; bouton < 4; bouton++) {
     poussoir[bouton].update();
+  }
 
+  for (uint8_t bouton = 0; bouton < 4; bouton++) {
     if (poussoir[bouton].fell()) {
-      messageCANEmission.data[0] = bouton;
-      const bool ok = controleurCAN.tryToSend(messageCANEmission);
-      if (ok) {
-        Serial.print("message ");
-        Serial.print(bouton);
-        Serial.println(" envoye !");
+      if (bouton < 2) {
+        /* 
+         * Si il s'agit des boutons 0 ou 1, on envoie
+         * bouton + 1 (ie 1 ou 2) dans le message des LED
+         */
+        messageCANLEDs.data[0] = bouton + 1;
+        const bool ok = controleurCAN.tryToSend(messageCANLEDs);
+        if (ok) {
+          Serial.print("led ");
+          Serial.print(bouton + 1);
+          Serial.println(" envoye !");
+        }
+        else {
+          Serial.print("echec de l'envoi de led ");
+          Serial.println(bouton + 1);
+        }
+      }
+      else {
+        /*
+         * Sinon il s'agit des boutons 2 ou 3, 
+         * on envoie bouton - 1  (ie 1 ou 2) dans le message
+         * des servos.
+         */
+        messageCANServos.data[0] = bouton - 1;
+        const bool ok = controleurCAN.tryToSend(messageCANServos);
+        if (ok) {
+          Serial.print("servo ");
+          Serial.print(bouton - 1);
+          Serial.println(" envoye !");
+        }
+        else {
+          Serial.print("echec de l'envoi du servo ");
+          Serial.println(bouton - 1);
+        }
       }
     }
-  }
+  }  
 }
