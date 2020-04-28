@@ -53,49 +53,40 @@ static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
  */
 CANMessage messageCAN;
 
+const int NB_LED = 2;
+const int NB_SERVO = 2;
+
 /*
  * Les LEDs sont connectees sur les broches 3 et 4
  */
-const uint8_t brocheLED1 = 3;
-const uint8_t brocheLED2 = 4;
+const uint8_t brocheLED[NB_LED] = { 3, 4 };
 
 /*
  * Les servos sont connectés sur les broches 5 et 6
  */
-const uint8_t brocheServo1 = 5;
-const uint8_t brocheServo2 = 6;
+const uint8_t brocheServo[NB_SERVO] = { 5, 6 };
 
-Servo servo1;
-Servo servo2;
+Servo servoMoteur[NB_SERVO];
 
 void messagePourLesLEDs(const CANMessage & inMessage)
 {
   Serial.print("Message LED reçu, changement de l'etat de la LED ");
   Serial.println(inMessage.data[0]);
-  if (inMessage.data[0] == 1) {
-    digitalWrite(brocheLED1, !digitalRead(brocheLED1));
-  }
-  else if (inMessage.data[0] == 2) {
-    digitalWrite(brocheLED2, !digitalRead(brocheLED2));
-  }
+  uint8_t numeroLED = inMessage.data[0];
+  digitalWrite(brocheLED[numeroLED], !digitalRead(brocheLED[numeroLED]));
 }
 
 void messagePourLesServos(const CANMessage & inMessage)
 {
   Serial.print("Message Servo reçu, changement de position du servo ");
   Serial.println(inMessage.data[0]);
-  if (inMessage.data[0] == 1) {
-    /* 
-     * Les deux angles sont 45 et 135. Pour passer de 45 à 135,
-     * on fait 180 - 45 = 135. Pour passer de 135 à 45, 
-     * on fait 180 - 135 = 45
-     */
-    servo1.write(180 - servo1.read());
-  }
-  else if (inMessage.data[0] == 2) {
-    servo2.write(180 - servo2.read());
-  }
-
+  uint8_t numeroServo = inMessage.data[0];
+  /* 
+   * Les deux angles sont 45 et 135. Pour passer de 45 à 135,
+   * on fait 180 - 45 = 135. Pour passer de 135 à 45, 
+   * on fait 180 - 135 = 45
+   */
+  servoMoteur[numeroServo].write(180 - servoMoteur[numeroServo].read());
 }
 
 /* 
@@ -129,6 +120,10 @@ void setup()
   Serial.println("Configuration du MCP2515");
   /* Fixe la vitesse du bus a 125 kbits/s */
   ACAN2515Settings reglages(FREQUENCE_DU_QUARTZ, FREQUENCE_DU_BUS_CAN);
+  /* 1 emplacement suffit dans la file d'attente de reception */
+  reglages.mReceiveBufferSize = 1;
+  /* Pas de file d'attente d'emission */
+  reglages.mTransmitBuffer0Size = 0;
   /* Demarre le CAN */
   const uint16_t codeErreur = controleurCAN.begin(reglages, [] { controleurCAN.isr(); }, masque, filtres, 2 );
   /* Verifie que tout est ok */
@@ -143,16 +138,17 @@ void setup()
   /*
    * Initialise les broche des LEDs
    */
-  pinMode(brocheLED1, OUTPUT);
-  pinMode(brocheLED2, OUTPUT);
-
+  for (uint8_t led = 0; led < NB_LED; led++) {
+    pinMode(brocheLED[led], OUTPUT);
+  }
+  
   /*
    * Initialise les objets servo
    */
-  servo1.attach(brocheServo1);
-  servo2.attach(brocheServo2);
-  servo1.write(45);
-  servo2.write(45);
+  for (uint8_t servo = 0; servo < NB_LED; servo++) {
+    servoMoteur[servo].attach(brocheServo[servo]);
+    servoMoteur[servo].write(45);
+  }
 }
 
 void loop()

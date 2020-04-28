@@ -84,6 +84,10 @@ void setup()
   Serial.println("Configuration du MCP2515");
   /* Fixe la vitesse du bus a 125 kbits/s */
   ACAN2515Settings reglages(FREQUENCE_DU_QUARTZ, FREQUENCE_DU_BUS_CAN);
+  /* Pas de file d'attente de reception */
+  reglages.mReceiveBufferSize = 0;
+  /* 1 emplacement suffit dans la file d'attente d'emission */
+  reglages.mTransmitBuffer0Size = 1;
   /* Demarre le CAN */
   const uint16_t codeErreur = controleurCAN.begin(reglages, [] { controleurCAN.isr(); } );
   /* Verifie que tout est ok */
@@ -125,36 +129,36 @@ void loop()
       if (bouton < 2) {
         /* 
          * Si il s'agit des boutons 0 ou 1, on envoie
-         * bouton + 1 (ie 1 ou 2) dans le message des LED
+         * bouton (ie 0 ou 1) dans le message des LED
          */
-        messageCANLEDs.data[0] = bouton + 1;
+        messageCANLEDs.data[0] = bouton;
         const bool ok = controleurCAN.tryToSend(messageCANLEDs);
         if (ok) {
           Serial.print("led ");
-          Serial.print(bouton + 1);
+          Serial.print(bouton);
           Serial.println(" envoye !");
         }
         else {
           Serial.print("echec de l'envoi de led ");
-          Serial.println(bouton + 1);
+          Serial.println(bouton);
         }
       }
       else {
         /*
          * Sinon il s'agit des boutons 2 ou 3, 
-         * on envoie bouton - 1  (ie 1 ou 2) dans le message
+         * on envoie bouton - 2  (ie 0 ou 1) dans le message
          * des servos.
          */
-        messageCANServos.data[0] = bouton - 1;
+        messageCANServos.data[0] = bouton - 2;
         const bool ok = controleurCAN.tryToSend(messageCANServos);
         if (ok) {
           Serial.print("servo ");
-          Serial.print(bouton - 1);
+          Serial.print(bouton - 2);
           Serial.println(" envoye !");
         }
         else {
           Serial.print("echec de l'envoi du servo ");
-          Serial.println(bouton - 1);
+          Serial.println(bouton - 2);
         }
       }
     }

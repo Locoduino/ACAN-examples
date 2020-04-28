@@ -59,14 +59,19 @@ static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
 CANMessage messageCANEmission;
 
 /*
+ * Le nombre de boutons
+ */
+static const uint8_t NB_BOUTONS = 2;
+
+/*
  * Les boutons poussoir sont relies aux broches 3 et 4 
  */
-static const uint8_t brocheBouton[] = { 3, 4 };
+static const uint8_t brocheBouton[NB_BOUTONS] = { 3, 4 };
 
 /*
  * Les anti rebond des boutons
  */
-Bounce poussoir[2];
+Bounce poussoir[NB_BOUTONS];
 
 void setup()
 {
@@ -90,7 +95,7 @@ void setup()
   }
 
   /* Initialise les boutons */
-  for (uint8_t bouton = 0; bouton < 2; bouton++) {
+  for (uint8_t bouton = 0; bouton < NB_BOUTONS; bouton++) {
     pinMode(brocheBouton[bouton], INPUT_PULLUP);
     poussoir[bouton].attach(brocheBouton[bouton]);
   }
@@ -103,7 +108,7 @@ void setup()
 
 void loop()
 {
-  for (uint8_t bouton = 0; bouton < 2; bouton++) {
+  for (uint8_t bouton = 0; bouton < NB_BOUTONS; bouton++) {
     poussoir[bouton].update();
 
     if (poussoir[bouton].fell()) {

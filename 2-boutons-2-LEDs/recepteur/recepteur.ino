@@ -53,9 +53,14 @@ static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
 CANMessage messageCANReception;
 
 /*
+ * Le nombre de LED
+ */
+static const uint8_t NB_LED = 2;
+
+/*
  * Les LEDs sont connectees sur les broches 3 et 4
  */
-const uint8_t brocheLED[] = { 3, 4 };
+const uint8_t brocheLED[NB_LED] = { 3, 4 };
 
 void setup()
 {
@@ -81,7 +86,7 @@ void setup()
   /*
    * Initialise les broche des LEDs
    */
-  for (uint8_t led = 0; led < 2; led++) {
+  for (uint8_t led = 0; led < NB_LED; led++) {
     pinMode(brocheLED[led], OUTPUT);
   }
 }
@@ -98,7 +103,7 @@ void loop()
     Serial.println(messageCANReception.data[0]);
     /* l'etat de la LED correspondante est change */
     const uint8_t led = messageCANReception.data[0];
-    if (led < 2) {
+    if (led < NB_LED) {
       digitalWrite(brocheLED[led], !digitalRead(brocheLED[led]));
     }
     else {
