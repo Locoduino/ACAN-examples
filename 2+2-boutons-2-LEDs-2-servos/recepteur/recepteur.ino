@@ -70,17 +70,17 @@ Servo servoMoteur[NB_SERVO];
 
 void messagePourLesLEDs(const CANMessage & inMessage)
 {
+  uint8_t numeroLED = (inMessage.id >> 2) & 1;
   Serial.print("Message LED reçu, changement de l'etat de la LED ");
-  Serial.println(inMessage.data[0]);
-  uint8_t numeroLED = inMessage.data[0];
+  Serial.println(numeroLED);
   digitalWrite(brocheLED[numeroLED], !digitalRead(brocheLED[numeroLED]));
 }
 
 void messagePourLesServos(const CANMessage & inMessage)
 {
+  uint8_t numeroServo = (inMessage.id >> 2) & 1;
   Serial.print("Message Servo reçu, changement de position du servo ");
-  Serial.println(inMessage.data[0]);
-  uint8_t numeroServo = inMessage.data[0];
+  Serial.println(numeroServo);
   /* 
    * Les deux angles sont 45 et 135. Pour passer de 45 à 135,
    * on fait 180 - 45 = 135. Pour passer de 135 à 45, 
@@ -99,7 +99,7 @@ void messagePourLesServos(const CANMessage & inMessage)
  * On ne veut que ces deux messages, donc le masque sélectionne
  * tous les bits :
  */
-const ACAN2515Mask masque = standard2515Mask(0x7FF, 0, 0); /* Que des 1 sur 11 bits */
+const ACAN2515Mask masque = standard2515Mask(0x7FB, 0, 0); /* Que des 1 sur 11 bits sauf le 3e à partir de la droite */
 /* 
  *  Et on définit deux filtres, le premier pour les messages
  *  relatifs aux LEDs et le second pour les messages relatifs

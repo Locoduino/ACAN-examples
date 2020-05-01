@@ -1,12 +1,12 @@
 /*
  * Exemple de liaison CAN pour la commande
  * 
- * recepteur.ino
+ * recepteur-servo.ino
  * 
  * Materiel :
  * - 1 carte CAN a base de MCP2515
  * - 1 arduino UNO
- * - 2 LEDs et 2 servos
+ * - 2 servos
  * 
  * Bibliotheque employees (disponibles via le gestionnaire de bibliothèques) :
  * - acan2515
@@ -47,19 +47,7 @@ static const uint32_t FREQUENCE_DU_QUARTZ = 8ul * 1000ul * 1000ul;
  */
 static const uint32_t FREQUENCE_DU_BUS_CAN = 125ul * 1000ul;
 
-/*
- * Un objet pour le message CAN. Par defaut c'est un message
- * standard avec l'identifiant 0 et aucun octet de donnees
- */
-CANMessage messageCAN;
-
-const int NB_LED = 2;
 const int NB_SERVO = 2;
-
-/*
- * Les LEDs sont connectees sur les broches 3 et 4
- */
-const uint8_t brocheLED[NB_LED] = { 3, 4 };
 
 /*
  * Les servos sont connectés sur les broches 5 et 6
@@ -67,14 +55,6 @@ const uint8_t brocheLED[NB_LED] = { 3, 4 };
 const uint8_t brocheServo[NB_SERVO] = { 5, 6 };
 
 Servo servoMoteur[NB_SERVO];
-
-void messagePourLesLEDs(const CANMessage & inMessage)
-{
-  Serial.print("Message LED reçu, changement de l'etat de la LED ");
-  Serial.println(inMessage.data[0]);
-  uint8_t numeroLED = inMessage.data[0];
-  digitalWrite(brocheLED[numeroLED], !digitalRead(brocheLED[numeroLED]));
-}
 
 void messagePourLesServos(const CANMessage & inMessage)
 {
@@ -91,22 +71,18 @@ void messagePourLesServos(const CANMessage & inMessage)
 
 /* 
  * Définition des masques et filtres.
- * Il s'agit de deux messages d'identifiant 1 et 2, 
+ * Il s'agit des messages d'identifiant 2, 
  * c'est à dire en binaire sur 11 bits (taille d'un identifiant
  * de trame standard) :
- * 00000000001
  * 00000000010
- * On ne veut que ces deux messages, donc le masque sélectionne
+ * On ne veut que ces messages, donc le masque sélectionne
  * tous les bits :
  */
 const ACAN2515Mask masque = standard2515Mask(0x7FF, 0, 0); /* Que des 1 sur 11 bits */
 /* 
- *  Et on définit deux filtres, le premier pour les messages
- *  relatifs aux LEDs et le second pour les messages relatifs
- *  aux servos.
+ *  Et on définit un filtre pour les messages relatifs aux servos.
  */
 const ACAN2515AcceptanceFilter filtres[] = {
-   { standard2515Filter(1, 0, 0), messagePourLesLEDs }, 
    { standard2515Filter(2, 0, 0), messagePourLesServos }
 };
 
@@ -125,7 +101,7 @@ void setup()
   /* Pas de file d'attente d'emission */
   reglages.mTransmitBuffer0Size = 0;
   /* Demarre le CAN */
-  const uint16_t codeErreur = controleurCAN.begin(reglages, [] { controleurCAN.isr(); }, masque, filtres, 2 );
+  const uint16_t codeErreur = controleurCAN.begin(reglages, [] { controleurCAN.isr(); }, masque, filtres, 1 );
   /* Verifie que tout est ok */
   if (codeErreur == 0) {
     Serial.println("Recepteur: configuration ok");
@@ -135,13 +111,6 @@ void setup()
     while (1); 
   }
 
-  /*
-   * Initialise les broche des LEDs
-   */
-  for (uint8_t led = 0; led < NB_LED; led++) {
-    pinMode(brocheLED[led], OUTPUT);
-  }
-  
   /*
    * Initialise les objets servo
    */
